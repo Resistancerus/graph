@@ -7,26 +7,22 @@ import static java.util.Collections.singletonList;
 
 public class UndirectedGraph implements Graph {
 
-    private List<Vertex> vertices = new ArrayList<>();
     private List<Edge> edges = new ArrayList<>();
     private Map<Vertex, List<Vertex>> verticesConnectionsMap = new HashMap<>();
 
     public void addVertex(final Vertex vertex) {
-        vertices.add(vertex);
         verticesConnectionsMap.computeIfAbsent(vertex, k -> new ArrayList<>());
     }
 
     public void addEdge(final Edge edge) {
         edges.add(edge);
-        if (!vertices.contains(edge.getStart())) {
-            vertices.add(edge.getStart());
+        if (verticesConnectionsMap.get(edge.getStart()) == null) {
             verticesConnectionsMap.put(edge.getStart(), singletonList(edge.getEnd()));
         } else {
             verticesConnectionsMap.get(edge.getStart()).add(edge.getEnd());
         }
 
-        if (!vertices.contains(edge.getEnd())) {
-            vertices.add(edge.getEnd());
+        if (verticesConnectionsMap.get(edge.getEnd()) == null) {
             verticesConnectionsMap.put(edge.getEnd(), singletonList(edge.getStart()));
         } else {
             verticesConnectionsMap.get(edge.getEnd()).add(edge.getStart());
@@ -40,7 +36,7 @@ public class UndirectedGraph implements Graph {
             return emptyList();
         }
 
-        if (vertices.stream().noneMatch(vertex -> vertex.equals(start) || vertex.equals(end))) {
+        if (verticesConnectionsMap.get(start) == null || verticesConnectionsMap.get(end) == null) {
             return emptyList();
         }
 
@@ -51,9 +47,14 @@ public class UndirectedGraph implements Graph {
             }
         }
 
-        final List<Vertex> result = getPath(start, end, new LinkedList<>());
+        final List<Vertex> result = getPath(start, end, new ArrayList<>());
         final List<Edge> edgesResult = new ArrayList<>();
-        //
+        for (int i = 0; i < result.size() - 1; ++i) {
+            final int j = i;
+            Optional<Edge> matchingEdge = edges.stream().filter(edge -> edge.getStart().equals(result.get(j)) && edge.getEnd().equals(result.get(j + 1))
+                    || edge.getStart().equals(result.get(j + 1)) && edge.getEnd().equals(result.get(j))).findFirst();
+            matchingEdge.ifPresent(edgesResult::add);
+        }
 
         return edgesResult;
     }
