@@ -1,5 +1,7 @@
 package org.resistancerus.graph;
 
-public interface Vertex {
-
-}
+/**
+ * @author Malishevskii Oleg
+ * @version 1.0
+ */
+public interface Vertex { }

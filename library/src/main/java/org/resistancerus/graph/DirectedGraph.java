@@ -2,7 +2,12 @@ package org.resistancerus.graph;
 
 import java.util.List;
 
-public class DirectedGraph implements Graph {
+/**
+ * Implementation of directed graph.
+ * @author Malishevskii Oleg
+ * @version 1.0
+ */
+class DirectedGraph implements Graph {
 
     @Override
     public void addVertex(Vertex vertex) {

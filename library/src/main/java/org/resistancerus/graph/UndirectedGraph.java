@@ -5,38 +5,75 @@ import java.util.*;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
-public class UndirectedGraph implements Graph {
 
-    private List<Edge> edges = new ArrayList<>();
-    private Map<Vertex, List<Vertex>> verticesConnectionsMap = new HashMap<>();
+/**
+ * Implementation of undirected graph.
+ * @author Malishevskii Oleg
+ * @version 1.0
+ */
+class UndirectedGraph implements Graph {
+
+    private final List<Edge> edges = new ArrayList<>();
+    private final Map<Vertex, List<Vertex>> verticesConnectionsMap = new HashMap<>();
+
+    // TODO return copy of data
+    public List<Edge> getEdges() {
+        return this.edges;
+    }
+
+    // TODO return copy of data
+    public List<Vertex> getVertices() {
+        return new ArrayList<>(this.verticesConnectionsMap.keySet());
+    }
 
     public void addVertex(final Vertex vertex) {
+        if (vertex == null) {
+            throw new IllegalArgumentException("Vertex could not be null.");
+        }
         verticesConnectionsMap.computeIfAbsent(vertex, k -> new ArrayList<>());
     }
 
     public void addEdge(final Edge edge) {
-        edges.add(edge);
-        if (verticesConnectionsMap.get(edge.getStart()) == null) {
-            verticesConnectionsMap.put(edge.getStart(), singletonList(edge.getEnd()));
-        } else {
-            verticesConnectionsMap.get(edge.getStart()).add(edge.getEnd());
+        if (edge == null || edge.getStart() == null || edge.getEnd() == null) {
+            throw new IllegalArgumentException("Edge or one of its points could not be null.");
         }
 
-        if (verticesConnectionsMap.get(edge.getEnd()) == null) {
-            verticesConnectionsMap.put(edge.getEnd(), singletonList(edge.getStart()));
-        } else {
-            verticesConnectionsMap.get(edge.getEnd()).add(edge.getStart());
+        if (edges.contains(edge)) {
+            return;
+        }
+
+        edges.add(edge);
+
+        verticesConnectionsMap.computeIfAbsent(edge.getStart(), k -> new ArrayList<>());
+        addConnectedVertex(edge.getStart(), edge.getEnd());
+
+        if (edge.getStart().equals(edge.getEnd())) {
+            return;
+        }
+
+        verticesConnectionsMap.computeIfAbsent(edge.getEnd(), k -> new ArrayList<>());
+        addConnectedVertex(edge.getEnd(), edge.getStart());
+    }
+
+    private void addConnectedVertex(final Vertex vertex, final Vertex connectedVertex) {
+        if (verticesConnectionsMap.get(vertex) != null && !verticesConnectionsMap.get(vertex).contains(connectedVertex)) {
+            verticesConnectionsMap.get(vertex).add(connectedVertex);
         }
     }
 
+    // TODO reimplement with BFS
     @Override
     public List<Edge> getPath(final Vertex start, final Vertex end) {
 
         if (start == null || end == null) {
-            return emptyList();
+            throw new IllegalArgumentException("Start and End vertices could not be null.");
         }
 
-        if (verticesConnectionsMap.get(start) == null || verticesConnectionsMap.get(end) == null) {
+        if (verticesConnectionsMap.get(start) == null  || verticesConnectionsMap.get(end) == null) {
+            throw new IllegalArgumentException("Start or End vertices does not belong to graph.");
+        }
+
+        if (isEmpty(verticesConnectionsMap.get(start)) || isEmpty(verticesConnectionsMap.get(end))) {
             return emptyList();
         }
 
@@ -44,7 +81,18 @@ public class UndirectedGraph implements Graph {
             final Optional<Edge> resultEdge = edges.stream().filter(edge -> edge.getStart().equals(edge.getEnd()) && edge.getStart().equals(start)).findFirst();
             if (resultEdge.isPresent()) {
                 return singletonList(resultEdge.get());
+            } else {
+                return emptyList();
             }
+        }
+
+        if (verticesConnectionsMap.get(start).contains(end)) {
+            return singletonList(
+                    edges.stream()
+                            .filter(edge -> edge.getStart().equals(start) && edge.getEnd().equals(end)
+                                    || edge.getStart().equals(end) && edge.getEnd().equals(start))
+                            .findFirst()
+                            .get());
         }
 
         final List<Vertex> result = getPath(start, end, new ArrayList<>());
@@ -59,6 +107,10 @@ public class UndirectedGraph implements Graph {
         return edgesResult;
     }
 
+    private boolean isEmpty(final Collection collection) {
+        return collection == null || collection.isEmpty();
+    }
+
     private List<Vertex> getPath(final Vertex start, final Vertex end, final List<Vertex> path) {
         path.add(start);
         if (start == end) {
@@ -66,9 +118,12 @@ public class UndirectedGraph implements Graph {
         }
         for (final Vertex current : verticesConnectionsMap.get(start)) {
             if (!path.contains(current)) {
-                path.addAll(getPath(current, end, path));
+                final List<Vertex> additionalPath = getPath(current, end, path);
+                if (additionalPath != null) {
+                    return additionalPath;
+                }
             }
         }
-        return path;
+        return null;
     }
 }
