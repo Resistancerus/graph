@@ -9,7 +9,7 @@ The library allows to create a graph with a user-defined vertices.
 
 It provides:
 
-*Graph<V> interface*
+__Graph<V> interface__
 
 Represents graph object. It contains the following methods:
 It could store vertices of any user-defined type.
@@ -21,7 +21,7 @@ It could store vertices of any user-defined type.
 
 _Note:_ Graph objects are not thread-safe (according basic requirements).
 
-__Usage:__
+_Usage:_
 
 ```java       
         final MyVertex a = new MyVertex("a");
@@ -34,12 +34,12 @@ __Usage:__
         final String result = graph.getPath(a, c); // result will be "a - b, b - c"
 ```
 
-*GraphFactory<V> class*
+__GraphFactory<V> class__
 
 It is a factory class for Graph<V> instance creation via createGraph(boolean directed) method.
 Directed flag is responsible for enabling directed edges support within the graph. It influences path calculation. 
 
-__Usage:__
+_Usage:_
 
 ```java
     final GraphFactory<MyVertex> factory = new GraphFactory<>();
