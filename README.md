@@ -4,52 +4,44 @@ Simple Graph Library
 Overview
 ---------
 
-This library was created as a test project for interview. It contains the following classes:
+This simple graph library was created as a test project for interview. 
+The library allows to create a graph with a user-defined vertices.
 
-*GraphFactory*
+It provides:
 
-It is a simple util class providing two static methods returning Graph object:
+*Graph<V> interface*
 
-* GraphFactory::getDirectedGraph() to create an instance of directed Graph.
-* GraphFactory::getUndirectedGraph() to create an instance of undirected Graph.
+Represents graph object. It contains the following methods:
+It could store vertices of any user-defined type.
 
-*Graph*
+* addVertex(V vertex)     - adds new vertex to graph. 
+* addEdge(V start, V end) - adds new edge to graph. Its verices wil be added to graph automatically if not exist. Loop edges are allowed.
+* getPath(V start, V end) - returns a list of edges between two provided vertices as a comma-separated values within String.
+* getVertices()           - returns unmodifiable collection of V vertices.
 
-Represents graph object. It provides the following interface:
+_Note:_ Graph objects are not thread-safe (according basic requirements).
 
-* Graph::addVertex(Vertex v) to add new vertex.
-* Graph::addEdge(Edge e) to add new edge. Its verices wil be added to graph automatically if not exist.
-* Graph::getPath(Vertex start, Vertex end) - returns a list of edges between two provided vertices.
+__Usage:__
 
-_Note 1:_ The library does not provide default implementation for Vertex and Edge, so users should implement Vertex and Edge interfaces on their own. 
+```java       
+        final MyVertex a = new MyVertex("a");
+        final MyVertex b = new MyVertex("b");
+        final MyVertex c = new MyVertex("c");
 
-_Note 2:_ Graph object is not thread-safe yet.
+        graph.addEdge(a, b);
+        graph.addEdge(b, c);
 
-*Vertex*
+        final String result = graph.getPath(a, c); // result will be "a - b, b - c"
+```
 
-Represents graph node. Default implementation is not provided.
+*GraphFactory<V> class*
 
-*Edge*
+It is a factory class for Graph<V> instance creation via createGraph(boolean directed) method.
+Directed flag is responsible for enabling directed edges support within the graph. It influences path calculation. 
 
-Represents graph edge between two vertices. Default implementation is not provided. It has two methods:
+__Usage:__
 
-* Edge::getStart() - returns first Vertex.
-* Edge::getEnd() - returns second Vertex.
-
-Usage
------
 ```java
-        final Graph graph = GraphFactory.getUndirectedGraph();
-        
-        final Vertex a = new TestVertex("a");
-        final Vertex b = new TestVertex("b");
-        final Vertex c = new TestVertex("c");
-
-        final Edge abEdge = new TestEdge(a, b);
-        final Edge acEdge = new TestEdge(a, c);
-
-        graph.addEdge(abEdge);
-        graph.addEdge(acEdge);
-
-        final List<Edge> result = graph.getPath(a, c);
+    final GraphFactory<MyVertex> factory = new GraphFactory<>();
+    final Graph<MyVertex> = factory.createGraph(false);
 ```
