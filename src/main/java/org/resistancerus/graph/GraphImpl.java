@@ -18,11 +18,21 @@ class GraphImpl<V> implements Graph<V> {
     private Logger logger = LoggerFactory.getLogger(GraphImpl.class);
 
     private boolean directed;
+    private boolean loopsAllowed;
     private final Map<V, List<V>> adjacentVerticesMap = new HashMap<>();
-    private final Map<SourceDestinationPair, String> pathsCache = new HashMap<>();
+    private final Map<Edge, String> pathsCache = new HashMap<>();
 
-    GraphImpl(final boolean directed) {
+    GraphImpl(final boolean directed, boolean loopsAllowed) {
         this.directed = directed;
+        this.loopsAllowed = loopsAllowed;
+    }
+
+    public boolean isDirected() {
+        return directed;
+    }
+
+    public boolean isLoopsAllowed() {
+        return loopsAllowed;
     }
 
     @Override
@@ -46,6 +56,10 @@ class GraphImpl<V> implements Graph<V> {
     public void addEdge(final V start, final V end) {
         if (start == null || end == null) {
             throw new IllegalArgumentException("Start or end could not be null.");
+        }
+
+        if (start == end && !loopsAllowed) {
+            throw new IllegalArgumentException("Loop creation is not allowed.");
         }
 
         adjacentVerticesMap.computeIfAbsent(start, adjacentVertices -> new ArrayList<>());
@@ -83,7 +97,7 @@ class GraphImpl<V> implements Graph<V> {
             return createEdge(source, destination);
         }
 
-        final SourceDestinationPair cachedPathKey = new SourceDestinationPair(source, destination);
+        final Edge cachedPathKey = new Edge(source, destination);
         if (pathsCache.get(cachedPathKey) != null) {
             return pathsCache.get(cachedPathKey);
         }
@@ -91,7 +105,7 @@ class GraphImpl<V> implements Graph<V> {
         final String result = getPathBFS(source, destination);
         logger.info("Path between {} and {} is: {}", source, destination, result);
 
-        pathsCache.putIfAbsent(new SourceDestinationPair(source, destination), result);
+        pathsCache.putIfAbsent(new Edge(source, destination), result);
 
         return result;
     }
@@ -159,11 +173,11 @@ class GraphImpl<V> implements Graph<V> {
         return "Graph: " + adjacentVerticesMap;
     }
 
-    private class SourceDestinationPair {
+    private class Edge {
         private V source;
         private V destination;
 
-        SourceDestinationPair(final V source, final V destination) {
+        Edge(final V source, final V destination) {
             this.source = source;
             this.destination = destination;
         }
@@ -172,7 +186,7 @@ class GraphImpl<V> implements Graph<V> {
         public boolean equals(Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
-            SourceDestinationPair that = (SourceDestinationPair) o;
+            Edge that = (Edge) o;
             return Objects.equals(source, that.source) &&
                     Objects.equals(destination, that.destination);
         }

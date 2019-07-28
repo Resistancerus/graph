@@ -34,10 +34,14 @@ _Usage:_
         final String result = graph.getPath(a, c); // result will be "a - b, b - c"
 ```
 
-__GraphFactory<V> class__
+__GraphFactory class__
 
-It is a factory class for Graph<V> instance creation via createGraph(boolean directed) method.
-Directed flag is responsible for enabling directed edges support within the graph. It influences path calculation. 
+It is a factory class for Graph<V> instance creation via static methods:
+* createGraph(boolean directed)
+* createGraph(boolean directed, boolean loopsAllowed)
+
+_directed_ flag enables directed edges support. It influences path calculation.
+_loopsAllowed_ flag enables loop edges creation.
 
 _Usage:_
 

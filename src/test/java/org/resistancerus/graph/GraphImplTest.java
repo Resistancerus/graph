@@ -10,11 +10,10 @@ import static org.junit.Assert.assertTrue;
 public class GraphImplTest {
 
     private Graph<TestVertex> graph;
-    private GraphFactory<TestVertex> factory = new GraphFactory<>();
 
     @Before
     public void setUp() {
-        graph = factory.createGraph(false);
+        graph = GraphFactory.createGraph(false);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -55,6 +54,21 @@ public class GraphImplTest {
     @Test(expected = IllegalArgumentException.class)
     public void testExceptionOnAddEdgeWithNullVertices() {
         graph.addEdge(null, null);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testExceptionOnAddLoopEdgeWhenItIsNotAllowed() {
+        final TestVertex a = new TestVertex("a");
+
+        graph.addEdge(a, a);
+    }
+
+    @Test
+    public void testAddLoopEdgeWhenItIsAllowed() {
+        graph = GraphFactory.createGraph(false, true);
+        final TestVertex a = new TestVertex("a");
+
+        graph.addEdge(a, a);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -148,6 +162,8 @@ public class GraphImplTest {
 
     @Test
     public void testGetPathBetweenTwoIdenticalVerticesWithLoop() {
+        graph = GraphFactory.createGraph(false, true);
+
         final TestVertex a = new TestVertex("a");
         final TestVertex b = new TestVertex("b");
 
@@ -196,7 +212,7 @@ public class GraphImplTest {
 
     @Test
     public void testGetDirectedPathBetweenTwoConnectedVerticesIsNotAvailable() {
-        graph = factory.createGraph(true);
+        graph = GraphFactory.createGraph(true);
 
         final TestVertex a = new TestVertex("a");
         final TestVertex b = new TestVertex("b");
@@ -210,7 +226,7 @@ public class GraphImplTest {
 
     @Test
     public void testGetDirectedPathBetweenTwoConnectedVertices() {
-        graph = factory.createGraph(true);
+        graph = GraphFactory.createGraph(true);
 
         final TestVertex a = new TestVertex("a");
         final TestVertex b = new TestVertex("b");

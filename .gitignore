@@ -1,12 +1,4 @@
 /*.iml
 /.idea
-/library/target
-/library/*.iml
-/app/*.iml
-/target/classes/org/resistancerus/graph/*.class
-/target/maven-status/maven-compiler-plugin/compile/default-compile/*.lst
-/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/*.lst
-/target/surefire-reports/*.xml
-/target/surefire-reports/*.txt
-/target/test-classes/org/resistancerus/graph/*.class
-/target/test-classes/org/resistancerus/graph/entity/*.class
+/target
+/target/*
