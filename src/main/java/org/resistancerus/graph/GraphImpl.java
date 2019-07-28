@@ -15,7 +15,7 @@ class GraphImpl<V> implements Graph<V> {
     private Logger logger = LoggerFactory.getLogger(GraphImpl.class);
     private boolean directed;
     private boolean loopsAllowed;
-    
+
     private final Map<V, Set<V>> adjacentVerticesMap = new HashMap<>();
 
     GraphImpl(final boolean directed, boolean loopsAllowed) {
