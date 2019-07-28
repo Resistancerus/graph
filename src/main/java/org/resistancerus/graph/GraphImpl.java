@@ -10,14 +10,13 @@ import java.util.*;
  * @author Malishevskii Oleg
  * @version 1.0
  */
-
 class GraphImpl<V> implements Graph<V> {
 
     private Logger logger = LoggerFactory.getLogger(GraphImpl.class);
-
     private boolean directed;
     private boolean loopsAllowed;
-    private final Map<V, List<V>> adjacentVerticesMap = new HashMap<>();
+    
+    private final Map<V, Set<V>> adjacentVerticesMap = new HashMap<>();
 
     GraphImpl(final boolean directed, boolean loopsAllowed) {
         this.directed = directed;
@@ -35,19 +34,29 @@ class GraphImpl<V> implements Graph<V> {
     }
 
     @Override
+    public Set<V> getVertices() {
+        return Collections.unmodifiableSet(adjacentVerticesMap.keySet());
+    }
+
+    @Override
+    public Set<V> getAdjacentVertices(V vertex) {
+        return adjacentVerticesMap.containsKey(vertex) ? Collections.unmodifiableSet(adjacentVerticesMap.get(vertex)) : null;
+    }
+
+    @Override
     public boolean addVertex(final V vertex) {
         if (vertex == null) {
             throw new IllegalArgumentException("Vertex could not be null.");
         }
 
         if (hasVertex(vertex)) {
-            logger.info("Vertex {} already exist in the graph.", vertex);
+            logger.debug("Vertex {} already exist in the graph.", vertex);
             return false;
         }
 
-        adjacentVerticesMap.put(vertex, new ArrayList<>());
+        adjacentVerticesMap.put(vertex, new HashSet<>());
 
-        logger.info("Added new vertex: {}", vertex);
+        logger.debug("Added new vertex: {}", vertex);
 
         return true;
     }
@@ -71,7 +80,7 @@ class GraphImpl<V> implements Graph<V> {
         adjacentVerticesMap.remove(vertex);
         adjacentVerticesMap.forEach((v, adjacentVertices) -> adjacentVertices.remove(vertex));
 
-        logger.info("Removed vertex: " + vertex);
+        logger.debug("Removed vertex: " + vertex);
         return true;
     }
 
@@ -86,7 +95,7 @@ class GraphImpl<V> implements Graph<V> {
         }
 
         if (hasEdge(start, end)) {
-            logger.info("Edge {} - {} already exist in the graph.", start, end);
+            logger.debug("Edge {} - {} already exist in the graph.", start, end);
             return false;
         }
 
@@ -96,7 +105,7 @@ class GraphImpl<V> implements Graph<V> {
 
         addAdjacentVertex(start, end);
         if (start.equals(end)) {
-            logger.info("Added loop edge: {} - {}", start, end);
+            logger.debug("Added loop edge: {} - {}", start, end);
             return true;
         }
 
@@ -104,7 +113,7 @@ class GraphImpl<V> implements Graph<V> {
             addAdjacentVertex(end, start);
         }
 
-        logger.info("Added edge: {} - {}", start, end);
+        logger.debug("Added edge: {} - {}", start, end);
         return true;
     }
 
@@ -140,92 +149,9 @@ class GraphImpl<V> implements Graph<V> {
             adjacentVertices.remove(end);
         });
 
-        logger.info("Removed edge: {} - {}", start, end);
+        logger.debug("Removed edge: {} - {}", start, end);
 
         return true;
-    }
-
-    private void addAdjacentVertex(final V currentVertex, final V adjacentVertex) {
-        if (!adjacentVerticesMap.get(currentVertex).contains(adjacentVertex)) {
-            adjacentVerticesMap.get(currentVertex).add(adjacentVertex);
-        }
-    }
-
-    @Override
-    public String getPath(final V source, final V destination) {
-        if (source == null || destination == null) {
-            throw new IllegalArgumentException("Start and end vertices could not be null.");
-        }
-
-        if (adjacentVerticesMap.get(source) == null  || adjacentVerticesMap.get(destination) == null) {
-            throw new IllegalArgumentException("Start or end vertices does not belong to graph.");
-        }
-
-        if (isEmpty(adjacentVerticesMap.get(source))
-                || !directed && isEmpty(adjacentVerticesMap.get(destination))) {
-            throw new IllegalArgumentException("Start or end vertex is not reachable.");
-        }
-
-        if (adjacentVerticesMap.get(source).contains(destination)) {
-            return createEdge(source, destination);
-        }
-
-        final String result = getPathBFS(source, destination);
-        logger.info("Path between {} and {} is: {}", source, destination, result);
-
-        return result;
-    }
-
-    private boolean isEmpty(final Collection collection) {
-        return collection == null || collection.isEmpty();
-    }
-
-    private String createEdge(final V start, final V end) {
-        return start + " - " + end;
-    }
-
-    private String getPathBFS(final V source, final V destination) {
-        final LinkedList<V> queue = new LinkedList<>();
-        final Map<V, Boolean> visited = new HashMap<>();
-        final Map<V, V> predecessor = new HashMap<>();
-
-        adjacentVerticesMap.keySet().forEach(vertex -> {
-            visited.put(vertex, false);
-            predecessor.put(vertex, null);
-        });
-
-        visited.put(source, true);
-        queue.add(source);
-
-        while (!queue.isEmpty()) {
-            final V current = queue.removeFirst();
-            for (final V adjacent : adjacentVerticesMap.get(current)) {
-                if (visited.get(adjacent)) {
-                    continue;
-                }
-
-                visited.put(adjacent, true);
-                predecessor.put(adjacent, current);
-
-                if (adjacent.equals(destination)) {
-                    return getPathString(predecessor, destination);
-                }
-
-                queue.addLast(adjacent);
-            }
-        }
-
-        return "";
-    }
-
-    private String getPathString(final Map<V, V> predecessors, final V end) {
-        final LinkedList<String> result = new LinkedList<>();
-        V current = end;
-        while (predecessors.get(current) != null) {
-            result.addFirst(createEdge(predecessors.get(current), current));
-            current = predecessors.get(current);
-        }
-        return String.join(", ", result);
     }
 
     @Override
@@ -233,27 +159,9 @@ class GraphImpl<V> implements Graph<V> {
         return "Graph: " + adjacentVerticesMap;
     }
 
-    private class Edge {
-        private V source;
-        private V destination;
-
-        Edge(final V source, final V destination) {
-            this.source = source;
-            this.destination = destination;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            Edge that = (Edge) o;
-            return Objects.equals(source, that.source) &&
-                    Objects.equals(destination, that.destination);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(source, destination);
+    private void addAdjacentVertex(final V currentVertex, final V adjacentVertex) {
+        if (!adjacentVerticesMap.get(currentVertex).contains(adjacentVertex)) {
+            adjacentVerticesMap.get(currentVertex).add(adjacentVertex);
         }
     }
 }

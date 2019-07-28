@@ -1,5 +1,7 @@
 package org.resistancerus.graph;
 
+import java.util.Set;
+
 /**
  * Graph interface which provides ability to add vertex, add edge and calculate path between two vertices.
  * @author Malishevskii Oleg
@@ -48,8 +50,12 @@ public interface Graph<V> {
     boolean areLoopsAllowed();
 
     /**
-     * Returns a path between two vertices.
-     * @return Stringed list of edges between two provided vertices or empty list if path does not exist.
+     * Returns a set of graph vertices.
      */
-    String getPath(final V start, final V end);
+    Set<V> getVertices();
+
+    /**
+     * Returns a set of adjacent vertices for provided vertices or null.
+     */
+    Set<V> getAdjacentVertices(final V vertex);
 }

@@ -1,5 +1,10 @@
 package org.resistancerus.graph.entity;
 
+/**
+ * Simple implementation of vertex for tests.
+ * @author Malishevskii Oleg
+ * @version 1.0
+ */
 public class TestVertex {
     private String name;
 
