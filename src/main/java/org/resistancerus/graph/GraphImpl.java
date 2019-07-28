@@ -5,8 +5,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
-import static java.util.Collections.unmodifiableCollection;
-
 /**
  * Implementation of Graph interface.
  * @author Malishevskii Oleg
@@ -20,100 +18,162 @@ class GraphImpl<V> implements Graph<V> {
     private boolean directed;
     private boolean loopsAllowed;
     private final Map<V, List<V>> adjacentVerticesMap = new HashMap<>();
-    private final Map<Edge, String> pathsCache = new HashMap<>();
 
     GraphImpl(final boolean directed, boolean loopsAllowed) {
         this.directed = directed;
         this.loopsAllowed = loopsAllowed;
     }
 
+    @Override
     public boolean isDirected() {
         return directed;
     }
 
-    public boolean isLoopsAllowed() {
+    @Override
+    public boolean areLoopsAllowed() {
         return loopsAllowed;
     }
 
     @Override
-    public void addVertex(final V vertex) {
+    public boolean addVertex(final V vertex) {
         if (vertex == null) {
             throw new IllegalArgumentException("Vertex could not be null.");
         }
 
-        adjacentVerticesMap.computeIfAbsent(vertex, adjacentVertices -> {
-            logger.info("Added new vertex {}", vertex);
-            return new ArrayList<>();
-        });
-    }
-
-    @Override
-    public Collection<V> getVertices() {
-        return unmodifiableCollection(adjacentVerticesMap.keySet());
-    }
-
-    @Override
-    public void addEdge(final V start, final V end) {
-        if (start == null || end == null) {
-            throw new IllegalArgumentException("Start or end could not be null.");
+        if (hasVertex(vertex)) {
+            logger.info("Vertex {} already exist in the graph.", vertex);
+            return false;
         }
 
-        if (start == end && !loopsAllowed) {
+        adjacentVerticesMap.put(vertex, new ArrayList<>());
+
+        logger.info("Added new vertex: {}", vertex);
+
+        return true;
+    }
+
+    @Override
+    public boolean hasVertex(final V vertex) {
+        return adjacentVerticesMap.keySet().contains(vertex);
+    }
+
+    @Override
+    public boolean removeVertex(final V vertex) {
+        if (vertex == null) {
+            throw new IllegalArgumentException("Couldn't remove null vertex.");
+        }
+
+        if (!hasVertex(vertex)) {
+            logger.error("Couldn't remove vertex which is not in graph.");
+            return false;
+        }
+
+        adjacentVerticesMap.remove(vertex);
+        adjacentVerticesMap.forEach((v, adjacentVertices) -> adjacentVertices.remove(vertex));
+
+        logger.info("Removed vertex: " + vertex);
+        return true;
+    }
+
+    @Override
+    public boolean addEdge(final V start, final V end) {
+        if (start == null || end == null) {
+            throw new IllegalArgumentException("Start or end vertex could not be null.");
+        }
+
+        if (!hasVertex(start) || !hasVertex(end)) {
+            throw new IllegalArgumentException("Start or end vertex does not belong to graph.");
+        }
+
+        if (hasEdge(start, end)) {
+            logger.info("Edge {} - {} already exist in the graph.", start, end);
+            return false;
+        }
+
+        if (start.equals(end) && !loopsAllowed) {
             throw new IllegalArgumentException("Loop creation is not allowed.");
         }
 
-        adjacentVerticesMap.computeIfAbsent(start, adjacentVertices -> new ArrayList<>());
         addAdjacentVertex(start, end);
-
-        if (start == end) {
-            logger.info("Added loop edge {} - {}", start, end);
-            return;
+        if (start.equals(end)) {
+            logger.info("Added loop edge: {} - {}", start, end);
+            return true;
         }
 
-        adjacentVerticesMap.computeIfAbsent(end, adjacentVertices -> new ArrayList<>());
         if (!directed) {
             addAdjacentVertex(end, start);
         }
 
-        logger.info("Added edge {} - {}", start, end);
+        logger.info("Added edge: {} - {}", start, end);
+        return true;
     }
 
     @Override
-    public String getPath(final V source, final V destination) {
-        if (source == null || destination == null) {
-            throw new IllegalArgumentException("Start and End vertices could not be null.");
+    public boolean hasEdge(final V start, final V end) {
+        if (start == null || end == null) {
+            throw new IllegalArgumentException("Start or end vertex could not be null.");
         }
 
-        if (adjacentVerticesMap.get(source) == null  || adjacentVerticesMap.get(destination) == null) {
-            throw new IllegalArgumentException("Start or End vertices does not belong to graph.");
+        if (!hasVertex(start) || !hasVertex(end)) {
+            logger.error("Start or end vertex does not belong to graph.");
+            return false;
         }
 
-        if (isEmpty(adjacentVerticesMap.get(source))
-                || !directed && isEmpty(adjacentVerticesMap.get(destination))) {
-            throw new IllegalArgumentException("Start or End vertices are not reachable.");
+        return directed
+                ? adjacentVerticesMap.get(start).contains(end)
+                : adjacentVerticesMap.get(start).contains(end) || adjacentVerticesMap.get(end).contains(start);
+    }
+
+    @Override
+    public boolean removeEdge(final V start, final V end) {
+        if (start == null || end == null) {
+            throw new IllegalArgumentException("Start or end vertex could not be null.");
         }
 
-        if (adjacentVerticesMap.get(source).contains(destination)) {
-            return createEdge(source, destination);
+        if (!hasEdge(start, end)) {
+            logger.error("Couldn't delete not existing edge.");
+            return false;
         }
 
-        final Edge cachedPathKey = new Edge(source, destination);
-        if (pathsCache.get(cachedPathKey) != null) {
-            return pathsCache.get(cachedPathKey);
-        }
+        adjacentVerticesMap.forEach((v, adjacentVertices) -> {
+            adjacentVertices.remove(start);
+            adjacentVertices.remove(end);
+        });
 
-        final String result = getPathBFS(source, destination);
-        logger.info("Path between {} and {} is: {}", source, destination, result);
+        logger.info("Removed edge: {} - {}", start, end);
 
-        pathsCache.putIfAbsent(new Edge(source, destination), result);
-
-        return result;
+        return true;
     }
 
     private void addAdjacentVertex(final V currentVertex, final V adjacentVertex) {
         if (!adjacentVerticesMap.get(currentVertex).contains(adjacentVertex)) {
             adjacentVerticesMap.get(currentVertex).add(adjacentVertex);
         }
+    }
+
+    @Override
+    public String getPath(final V source, final V destination) {
+        if (source == null || destination == null) {
+            throw new IllegalArgumentException("Start and end vertices could not be null.");
+        }
+
+        if (adjacentVerticesMap.get(source) == null  || adjacentVerticesMap.get(destination) == null) {
+            throw new IllegalArgumentException("Start or end vertices does not belong to graph.");
+        }
+
+        if (isEmpty(adjacentVerticesMap.get(source))
+                || !directed && isEmpty(adjacentVerticesMap.get(destination))) {
+            throw new IllegalArgumentException("Start or end vertex is not reachable.");
+        }
+
+        if (adjacentVerticesMap.get(source).contains(destination)) {
+            return createEdge(source, destination);
+        }
+
+        final String result = getPathBFS(source, destination);
+        logger.info("Path between {} and {} is: {}", source, destination, result);
+
+        return result;
     }
 
     private boolean isEmpty(final Collection collection) {

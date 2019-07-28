@@ -1,8 +1,5 @@
 package org.resistancerus.graph;
 
-import java.util.Collection;
-import java.util.List;
-
 /**
  * Graph interface which provides ability to add vertex, add edge and calculate path between two vertices.
  * @author Malishevskii Oleg
@@ -13,18 +10,42 @@ public interface Graph<V> {
     /**
      * Adds new vertex to graph.
      */
-    void addVertex(final V vertex);
+    boolean addVertex(final V vertex);
 
     /**
-     * Returns all vertices of the graph.
-     * @return List of V objects
+     * Removes vertex from the graph.
      */
-    Collection<V> getVertices();
+    boolean removeVertex(final V vertex);
 
     /**
-     * Adds new edge to graph. New vertices will be added if they do not exist.
+     * Checks whether vertex exists in the graph.
      */
-    void addEdge(final V start, final V end);
+    boolean hasVertex(final V vertex);
+
+    /**
+     * Adds new edge to graph. Both vertices must exist.
+     */
+    boolean addEdge(final V start, final V end);
+
+    /**
+     * Removes edge from the graph. If directed edges are not supported, reverse edge will also be deleted.
+     */
+    boolean removeEdge(final V start, final V end);
+
+    /**
+     * Checks edge already exists in the graph. If directed edges are not supported, reverse edge existence will also be checked.
+     */
+    boolean hasEdge(final V start, final V end);
+
+    /**
+     * Checks if graph supports directed edges.
+     */
+    boolean isDirected();
+
+    /**
+     * Checks if graph supports loop edges.
+     */
+    boolean areLoopsAllowed();
 
     /**
      * Returns a path between two vertices.
